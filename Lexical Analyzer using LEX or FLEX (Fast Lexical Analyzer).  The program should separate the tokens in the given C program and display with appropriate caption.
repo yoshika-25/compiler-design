@@ -1,0 +1,64 @@
+LEX PRO:
+%{
+#include <stdio.h>
+#include <string.h>
+
+int comment_lines = 0;
+FILE *outfile;
+
+%}
+
+%%
+"//".*\n          { comment_lines++; /* Single-line comment */ }
+"/*"[^*]*\*+([^/*][^*]*\*+)*"/" { 
+    char *p = yytext;
+    while ((p = strstr(p, "\n")) != NULL) {
+        comment_lines++;
+        p++;
+    }
+}
+.|\n              { fputc(yytext[0], outfile); }
+
+%%
+
+int main(int argc, char **argv) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
+        return 1;
+    }
+
+    FILE *infile = fopen(argv[1], "r");
+    if (!infile) {
+        perror("Failed to open input file");
+        return 1;
+    }
+
+    outfile = fopen(argv[2], "w");
+    if (!outfile) {
+        perror("Failed to open output file");
+        fclose(infile);
+        return 1;
+    }
+
+    yyin = infile;
+    yylex();
+
+    fclose(infile);
+    fclose(outfile);
+
+    printf("Number of comment lines: %d\n", comment_lines);
+    return 0;
+}
+
+
+C PRO:
+#include<stdio.h> 
+int main()
+{
+int a,b,c; /*varible declaration*/
+printf(“enter two numbers”); 
+scanf(“%d %d”,&a,&b);
+c=a+b;//adding two numbers 
+printf(“sum is %d”,c);
+return 0;
+}
