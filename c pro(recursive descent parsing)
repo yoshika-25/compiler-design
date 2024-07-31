@@ -1,0 +1,110 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <string.h>
+
+const char *input;
+int index;
+
+bool E();
+bool E_prime();
+bool T();
+bool T_prime();
+bool F();
+
+bool match(char expected) {
+    if (input[index] == expected) {
+        index++;
+        return true;
+    }
+    return false;
+}
+
+bool E() {
+    if (T()) {
+        if (E_prime()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool E_prime() {
+    int savedIndex = index;
+    if (match('+')) {
+        if (T()) {
+            if (E_prime()) {
+                return true;
+            }
+        }
+        index = savedIndex;
+        return false;
+    }
+    return true; // ε transition
+}
+
+bool T() {
+    if (F()) {
+        if (T_prime()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool T_prime() {
+    int savedIndex = index;
+    if (match('*')) {
+        if (F()) {
+            if (T_prime()) {
+                return true;
+            }
+        }
+        index = savedIndex;
+        return false;
+    }
+    return true; // ε transition
+}
+
+bool F() {
+    int savedIndex = index;
+    if (match('(')) {
+        if (E()) {
+            if (match(')')) {
+                return true;
+            }
+        }
+        index = savedIndex;
+        return false;
+    }
+    if (isalnum(input[index])) { // id (identifier)
+        index++;
+        return true;
+    }
+    return false;
+}
+
+bool parse(const char *str) {
+    input = str;
+    index = 0;
+
+    if (E() && input[index] == '\0') {
+        return true;
+    }
+    return false;
+}
+
+int main() {
+    char inputString[100];
+
+    printf("Enter an arithmetic expression to check: ");
+    scanf("%s", inputString);
+
+    if (parse(inputString)) {
+        printf("The expression is valid.\n");
+    } else {
+        printf("The expression is invalid.\n");
+    }
+
+    return 0;
+}
