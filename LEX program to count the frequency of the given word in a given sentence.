@@ -1,0 +1,107 @@
+LEX PRO:
+%{
+#include <stdio.h>
+#include <string.h>
+
+char word_to_find[100];
+int word_count = 0;
+
+void count_word(const char* str);
+
+%}
+
+%%
+{word_to_find}     { word_count++; }
+.|\n               { /* Ignore other characters */ }
+
+%%
+
+int main(int argc, char **argv) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <word> <sentence>\n", argv[0]);
+        return 1;
+    }
+
+    strcpy(word_to_find, argv[1]);
+
+    // Concatenate all the remaining arguments to form the sentence
+    for (int i = 2; i < argc; i++) {
+        strcat(word_to_find, " ");
+        strcat(word_to_find, argv[i]);
+    }
+
+    // Setting the input string for Flex
+    yy_scan_string(argv[2]);
+    yylex();
+
+    printf("The word '%s' occurs %d times in the given sentence.\n", argv[1], word_count);
+
+    return 0;
+}
+
+
+C PRO:
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_LENGTH 1000
+
+// Function to convert a string to lowercase
+void to_lowercase(char *str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = tolower(str[i]);
+    }
+}
+
+// Function to count the frequency of a word in a sentence
+int count_word_frequency(const char *sentence, const char *word) {
+    int count = 0;
+    char temp_sentence[MAX_LENGTH];
+    char *token;
+    
+    // Copy the sentence to a temporary buffer and convert to lowercase
+    strncpy(temp_sentence, sentence, MAX_LENGTH);
+    temp_sentence[MAX_LENGTH - 1] = '\0';  // Ensure null termination
+    to_lowercase(temp_sentence);
+
+    // Convert the word to lowercase
+    char temp_word[MAX_LENGTH];
+    strncpy(temp_word, word, MAX_LENGTH);
+    temp_word[MAX_LENGTH - 1] = '\0';  // Ensure null termination
+    to_lowercase(temp_word);
+
+    // Tokenize the sentence and count occurrences of the word
+    token = strtok(temp_sentence, " \t\n");
+    while (token != NULL) {
+        if (strcmp(token, temp_word) == 0) {
+            count++;
+        }
+        token = strtok(NULL, " \t\n");
+    }
+
+    return count;
+}
+
+int main() {
+    char sentence[MAX_LENGTH];
+    char word[MAX_LENGTH];
+
+    printf("Enter the sentence: ");
+    fgets(sentence, MAX_LENGTH, stdin);
+
+    // Remove newline character if present
+    sentence[strcspn(sentence, "\n")] = '\0';
+
+    printf("Enter the word to count: ");
+    fgets(word, MAX_LENGTH, stdin);
+
+    // Remove newline character if present
+    word[strcspn(word, "\n")] = '\0';
+
+    int frequency = count_word_frequency(sentence, word);
+
+    printf("The word \"%s\" appears %d times in the sentence.\n", word, frequency);
+
+    return 0;
+}
