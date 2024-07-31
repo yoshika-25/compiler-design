@@ -1,0 +1,31 @@
+#include <stdio.h>
+
+int main() {
+    int number;
+    int positiveCount = 0, negativeCount = 0;
+
+    printf("Enter numbers (0 to stop):\n");
+
+    while (1) {
+        printf("Enter a number: ");
+        scanf("%d", &number);
+
+        // Check for the sentinel value to stop the input
+        if (number == 0) {
+            break;
+        }
+        
+        // Count positive and negative numbers
+        if (number > 0) {
+            positiveCount++;
+        } else if (number < 0) {
+            negativeCount++;
+        }
+    }
+
+    // Display the results
+    printf("Number of positive numbers: %d\n", positiveCount);
+    printf("Number of negative numbers: %d\n", negativeCount);
+
+    return 0;
+}
