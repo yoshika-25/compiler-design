@@ -1,0 +1,118 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <math.h>
+
+typedef enum {NUMBER, OPERATOR, END} TokenType;
+
+typedef struct {
+    TokenType type;
+    double value;
+    char op;
+} Token;
+
+const char *input;
+int index;
+
+Token getToken() {
+    Token token;
+    while (input[index] == ' ') index++; // skip whitespace
+
+    if (isdigit(input[index]) || input[index] == '.') {
+        token.type = NUMBER;
+        token.value = strtod(&input[index], (char **)&input[index]);
+    } else if (input[index] == '\0') {
+        token.type = END;
+    } else {
+        token.type = OPERATOR;
+        token.op = input[index++];
+    }
+    return token;
+}
+
+double expression();
+double term();
+double factor();
+double power();
+double primary();
+
+double expression() {
+    double result = term();
+    Token token = getToken();
+    while (token.type == OPERATOR && (token.op == '+' || token.op == '-')) {
+        if (token.op == '+') {
+            result += term();
+        } else {
+            result -= term();
+        }
+        token = getToken();
+    }
+    index--;
+    return result;
+}
+
+double term() {
+    double result = factor();
+    Token token = getToken();
+    while (token.type == OPERATOR && (token.op == '*' || token.op == '/')) {
+        if (token.op == '*') {
+            result *= factor();
+        } else {
+            result /= factor();
+        }
+        token = getToken();
+    }
+    index--;
+    return result;
+}
+
+double factor() {
+    double result = power();
+    Token token = getToken();
+    while (token.type == OPERATOR && token.op == '^') {
+        result = pow(result, power());
+        token = getToken();
+    }
+    index--;
+    return result;
+}
+
+double power() {
+    return primary();
+}
+
+double primary() {
+    Token token = getToken();
+    double result;
+    if (token.type == NUMBER) {
+        result = token.value;
+    } else if (token.type == OPERATOR && token.op == '(') {
+        result = expression();
+        token = getToken();
+        if (token.type != OPERATOR || token.op != ')') {
+            printf("Error: Unmatched parentheses\n");
+            exit(1);
+        }
+    } else {
+        printf("Error: Unexpected token\n");
+        exit(1);
+    }
+    return result;
+}
+
+double evaluate(const char *expr) {
+    input = expr;
+    index = 0;
+    return expression();
+}
+
+int main() {
+    char inputString[100];
+    printf("Enter an arithmetic expression: ");
+    scanf("%[^\n]", inputString);
+
+    double result = evaluate(inputString);
+    printf("Result: %lf\n", result);
+
+    return 0;
+}
