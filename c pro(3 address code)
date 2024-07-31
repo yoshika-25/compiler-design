@@ -1,0 +1,93 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
+#define MAX 100
+
+typedef struct {
+    char op;
+    char arg1[MAX];
+    char arg2[MAX];
+    char result[MAX];
+} ThreeAddressCode;
+
+ThreeAddressCode tac[MAX];
+int tacIndex = 0;
+
+const char *input;
+int index;
+
+void printTAC() {
+    printf("Three Address Code:\n");
+    for (int i = 0; i < tacIndex; i++) {
+        printf("%s = %s %c %s\n", tac[i].result, tac[i].arg1, tac[i].op, tac[i].arg2);
+    }
+}
+
+void addTAC(char op, const char *arg1, const char *arg2, const char *result) {
+    tac[tacIndex].op = op;
+    strcpy(tac[tacIndex].arg1, arg1);
+    strcpy(tac[tacIndex].arg2, arg2);
+    strcpy(tac[tacIndex].result, result);
+    tacIndex++;
+}
+
+char* newTemp() {
+    static int tempCount = 0;
+    static char temp[10];
+    snprintf(temp, sizeof(temp), "t%d", tempCount++);
+    return temp;
+}
+
+void parseExpression();
+
+void parseFactor() {
+    if (isdigit(input[index])) {
+        char temp[10];
+        snprintf(temp, sizeof(temp), "%c", input[index++]);
+        addTAC(' ', temp, " ", newTemp());
+    } else if (input[index] == '(') {
+        index++;
+        parseExpression();
+        if (input[index] == ')') {
+            index++;
+        }
+    }
+}
+
+void parseTerm() {
+    parseFactor();
+    while (input[index] == '*' || input[index] == '/') {
+        char op = input[index++];
+        parseFactor();
+        char *result = newTemp();
+        addTAC(op, tac[tacIndex - 2].result, tac[tacIndex - 1].result, result);
+    }
+}
+
+void parseExpression() {
+    parseTerm();
+    while (input[index] == '+' || input[index] == '-') {
+        char op = input[index++];
+        parseTerm();
+        char *result = newTemp();
+        addTAC(op, tac[tacIndex - 2].result, tac[tacIndex - 1].result, result);
+    }
+}
+
+int main() {
+    char inputString[MAX];
+
+    printf("Enter an arithmetic expression: ");
+    scanf("%[^\n]", inputString);
+
+    input = inputString;
+    index = 0;
+
+    parseExpression();
+
+    printTAC();
+
+    return 0;
+}
