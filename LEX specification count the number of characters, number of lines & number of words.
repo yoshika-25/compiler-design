@@ -1,0 +1,82 @@
+LEX PRO:
+%{
+#include <stdio.h>
+
+int char_count = 0;
+int line_count = 0;
+int word_count = 0;
+int in_word = 0;
+
+%}
+
+%%
+
+\n              { line_count++; char_count++; in_word = 0; }
+[ \t]+          { char_count += yyleng; in_word = 0; }
+[a-zA-Z0-9]+    { char_count += yyleng; word_count++; in_word = 1; }
+.               { char_count++; }
+
+%%
+
+int main(int argc, char **argv) {
+    if (argc > 1) {
+        FILE *file = fopen(argv[1], "r");
+        if (!file) {
+            perror("Failed to open file");
+            return 1;
+        }
+        yyin = file;
+    }
+    yylex();
+    printf("Number of characters: %d\n", char_count);
+    printf("Number of lines: %d\n", line_count);
+    printf("Number of words: %d\n", word_count);
+    return 0;
+}
+
+
+C PRO:
+#include <stdio.h>
+#include <ctype.h>
+
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        return 1;
+    }
+
+    FILE *file = fopen(argv[1], "r");
+    if (!file) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    int characters = 0;
+    int lines = 0;
+    int words = 0;
+    int in_word = 0;
+    int c;
+
+    while ((c = fgetc(file)) != EOF) {
+        characters++;
+        
+        if (c == '\n') {
+            lines++;
+        }
+        
+        if (isspace(c)) {
+            in_word = 0;
+        } else if (!in_word) {
+            in_word = 1;
+            words++;
+        }
+    }
+
+    fclose(file);
+
+    printf("Number of characters: %d\n", characters);
+    printf("Number of lines: %d\n", lines);
+    printf("Number of words: %d\n", words);
+
+    return 0;
+}
