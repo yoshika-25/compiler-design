@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 100
+
+typedef struct {
+    char expression[MAX];
+    char result[MAX];
+} CodeLine;
+
+typedef struct {
+    char expression[MAX];
+    char result[MAX];
+} CommonSubexpression;
+
+CodeLine code[MAX];
+CommonSubexpression subexpressions[MAX];
+int codeIndex = 0;
+int subexprIndex = 0;
+
+void addCodeLine(const char *expr, const char *result) {
+    strcpy(code[codeIndex].expression, expr);
+    strcpy(code[codeIndex].result, result);
+    codeIndex++;
+}
+
+void addSubexpression(const char *expr, const char *result) {
+    strcpy(subexpressions[subexprIndex].expression, expr);
+    strcpy(subexpressions[subexprIndex].result, result);
+    subexprIndex++;
+}
+
+int findSubexpression(const char *expr) {
+    for (int i = 0; i < subexprIndex; i++) {
+        if (strcmp(subexpressions[i].expression, expr) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void optimizeCode() {
+    for (int i = 0; i < codeIndex; i++) {
+        int index = findSubexpression(code[i].expression);
+        if (index != -1) {
+            // Replace with common subexpression result
+            printf("%s = %s\n", code[i].result, subexpressions[index].result);
+        } else {
+            // Add new subexpression
+            char result[MAX];
+            snprintf(result, sizeof(result), "t%d", subexprIndex);
+            addSubexpression(code[i].expression, result);
+            printf("%s = %s\n", result, code[i].expression);
+        }
+    }
+}
+
+int main() {
+    char expr[MAX];
+    char result[MAX];
+
+    printf("Enter code (type 'end' to finish):\n");
+    while (1) {
+        printf("Expression (e.g., a + b): ");
+        scanf(" %[^\n]", expr);
+        if (strcmp(expr, "end") == 0) {
+            break;
+        }
+        printf("Result variable: ");
+        scanf("%s", result);
+        addCodeLine(expr, result);
+    }
+
+    printf("\nOptimized Code:\n");
+    optimizeCode();
+
+    return 0;
+}
