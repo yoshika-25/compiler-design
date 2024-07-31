@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX 100
+
+typedef struct {
+    char nonTerminal;
+    char productions[MAX][MAX];
+    int prodCount;
+} Grammar;
+
+void readGrammar(Grammar *grammar) {
+    printf("Enter the non-terminal: ");
+    scanf(" %c", &grammar->nonTerminal);
+
+    printf("Enter the number of productions: ");
+    scanf("%d", &grammar->prodCount);
+
+    printf("Enter the productions (e.g., A -> Ab | c):\n");
+    for (int i = 0; i < grammar->prodCount; i++) {
+        printf("Production %d: ", i + 1);
+        scanf(" %s", grammar->productions[i]);
+    }
+}
+
+void eliminateLeftRecursion(Grammar *grammar) {
+    char nonTerminal = grammar->nonTerminal;
+    char newNonTerminal = nonTerminal + '1';  // Create a new non-terminal (e.g., if A, then A')
+    char alpha[MAX][MAX], beta[MAX][MAX];
+    int alphaCount = 0, betaCount = 0;
+
+    for (int i = 0; i < grammar->prodCount; i++) {
+        if (grammar->productions[i][0] == nonTerminal) {
+            strcpy(alpha[alphaCount++], &grammar->productions[i][1]);  // A -> Aα
+        } else {
+            strcpy(beta[betaCount++], grammar->productions[i]);  // A -> β
+        }
+    }
+
+    // Print the new grammar without left recursion
+    printf("\nNew Grammar after eliminating left recursion:\n");
+
+    // Print productions for the original non-terminal
+    printf("%c -> ", nonTerminal);
+    for (int i = 0; i < betaCount; i++) {
+        printf("%s%c", beta[i], newNonTerminal);
+        if (i != betaCount - 1) {
+            printf(" | ");
+        }
+    }
+    printf("\n");
+
+    // Print productions for the new non-terminal
+    printf("%c -> ", newNonTerminal);
+    for (int i = 0; i < alphaCount; i++) {
+        printf("%s%c", alpha[i], newNonTerminal);
+        if (i != alphaCount - 1) {
+            printf(" | ");
+        }
+    }
+    printf(" | ε\n");
+}
+
+int main() {
+    Grammar grammar;
+
+    readGrammar(&grammar);
+    eliminateLeftRecursion(&grammar);
+
+    return 0;
+}
